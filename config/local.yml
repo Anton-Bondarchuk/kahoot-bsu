@@ -1,0 +1,11 @@
+env: "local"
+
+storage:
+  database_url: "postgres://postgres:postgres@postgres:5432/postgres"
+
+server:
+  port: 8080
+
+bot:
+  token: "5790471717:AAGNWzn5g5apmzaBARgjJz5TCsQrZpru9ZI"
+  timeout: 60

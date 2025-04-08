@@ -1,0 +1,7 @@
+env: "local"
+
+storage:
+  database_url: "postgresql://postgres:HPUbGJXdRBchvtSdqaRBACkxzwhgFtdE@postgres.railway.internal:5432/railway"
+
+server:
+  port: 8080
