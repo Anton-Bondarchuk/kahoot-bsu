@@ -5,3 +5,12 @@ storage:
 
 server:
   port: 8080
+
+bot:
+  token: "5790471717:AAGNWzn5g5apmzaBARgjJz5TCsQrZpru9ZI"
+  timeout: 60
+  debug: false
+
+web_app:
+  url: ""
+  port: 8081

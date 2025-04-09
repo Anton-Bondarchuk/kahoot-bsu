@@ -6,58 +6,70 @@ import (
 	"kahoot_bsu/internal/telegram/command"
 	"kahoot_bsu/internal/telegram/messages"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// Bot - структура для хранения бота и базы данных
-
-// NewBot - функция для создания нового бота
 func New(cfg config.BotConfig) (*models.Bot, error) {
 	botAPI, err := tgbotapi.NewBotAPI(cfg.Token)
 	if err != nil {
 		return nil, err
 	}
 
+	botAPI.Debug = cfg.Debug
+
 	// TODO: add With and functional option pattern
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = cfg.Timeout
 
-	updates, err := botAPI.GetUpdatesChan(u)
-	if err != nil {
-		return nil, err
-	}
-
+	updates := botAPI.GetUpdatesChan(u)
+	
 	return &models.Bot{
 		Telegram:      botAPI,
-		// DB:            db,
-		UpdateChannel: updates, // Инициализируем канал обновлений
-	}, nil
+		UpdateChannel: updates}, nil
 }
 
 func Start(b *models.Bot) {
-	messHandler := messages.New(b)
 	for update := range b.UpdateChannel {
-		if update.Message != nil {
-			if update.Message.IsCommand() {
-				handleCommand(b, update.Message)
-			} else {
-				messHandler.HandleEmailRegistration(update.Message)
-			}
+		if update.Message == nil {
+			continue
+		}
+
+		if update.Message.IsCommand() {
+			handleCommand(b, update.Message)
+		} else {
+			handleMessages(b, update.Message)
 		}
 	}
 }
 
-func handleCommand(b *models.Bot, message *tgbotapi.Message) {
-	comandHandler := command.New(b)
-	
-	switch message.Command() {
-	case "start":
-		comandHandler.Start(message)
-	case "register":
-		comandHandler.Register(message)
+type CommandInterface interface {
+	Execute(message *tgbotapi.Message)
+}
 
-	default:
-		msg := tgbotapi.NewMessage(message.Chat.ID, "Неизвестная команда. Используйте /start или /help.")
-		b.Telegram.Send(msg)
+func handleCommand(b *models.Bot, message *tgbotapi.Message) {
+	comandHandler := command.New(b, "http://localhost:3000/")
+
+	commandStrategy := map[string]CommandInterface{
+		"start": &command.StartCommand{CommandHandler: comandHandler},
+		"register":   &command.RegisterCommand{CommandHandler: comandHandler},
+		"kahoot":   &command.KahootComand{CommandHandler: comandHandler},
+		"help": &command.HelpCommand{CommandHandler: comandHandler},
+		"unknown": &command.UnknownCommand{CommandHandler: comandHandler},
 	}
+
+	_, ok := commandStrategy[message.Command()]
+
+	if (!ok) {
+		commandStrategy["unknown"].Execute(message)
+		return
+	}
+
+	commandStrategy[message.Command()].Execute(message)
+}
+
+func handleMessages(b *models.Bot, message *tgbotapi.Message) {
+	messHandler := messages.New(b)
+
+	emailReg := &messages.HandleEmailRegistrationMessenger{MessagesHandler: messHandler}
+	emailReg.Execute(message)
 }

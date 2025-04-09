@@ -11,7 +11,7 @@ func main() {
 
 	telegramBot, err := bot.New(cfg.BotConfig)
 	if err != nil {
-		log.Fatalf("Ошибка инициализации бота: %v", err)
+		log.Fatalf("Exception on the start the bot: %v", err)
 	}
 
 	bot.Start(telegramBot)

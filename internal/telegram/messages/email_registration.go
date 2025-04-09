@@ -1,23 +1,17 @@
 package messages
 
 import (
-	"kahoot_bsu/internal/domain/models"
 	"regexp"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 
-type MessagesHandler struct {
-	bot *models.Bot
+type HandleEmailRegistrationMessenger struct {
+	*MessagesHandler
 }
 
-func New(bot *models.Bot) *MessagesHandler {
-	return &MessagesHandler{
-		bot: bot}
-}
-
-func (h *MessagesHandler) HandleEmailRegistration(message *tgbotapi.Message) {
+func (h *MessagesHandler) Execute(message *tgbotapi.Message) {
 	email := message.Text
 	pattern := `^[^@]+@bsu\.by$`
 	

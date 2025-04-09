@@ -22,6 +22,7 @@ type StorageConfig struct {
 type BotConfig struct {
 	Token string `yaml:"token" env-required:"true"`
 	Timeout int  `yaml:"timeout" env-default:"60"`
+	Debug    bool `yaml:"debug" env-default:"false"`
 }
 
 func MustLoad() *Config {
