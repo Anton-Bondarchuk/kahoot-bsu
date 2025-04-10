@@ -89,25 +89,6 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-
-		// Setup template rendering
-		router.LoadHTMLGlob("templates/*")
-	
-		// Static file serving
-		router.Static("/static", "./static")
-	
-		// Render index.html template
-		router.GET("/", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "index.html", gin.H{
-				"title":      "Kahoot BSU Quiz Application",
-				"version":    version,
-				"buildTime":  buildTime,
-				"buildUser":  buildUser,
-				"serverTime": time.Now().Format("2006-01-02 15:04:05"),
-			})
-		})
-	
-
 	api := router.Group("/api")
 	{
 		// Quiz routes

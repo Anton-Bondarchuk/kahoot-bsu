@@ -47,7 +47,7 @@ type CommandInterface interface {
 }
 
 func handleCommand(b *models.Bot, message *tgbotapi.Message) {
-	comandHandler := command.New(b, "http://localhost:3000/")
+	comandHandler := command.New(b, "https://af09-185-53-133-77.ngrok-free.app/")
 
 	commandStrategy := map[string]CommandInterface{
 		"start": &command.StartCommand{CommandHandler: comandHandler},

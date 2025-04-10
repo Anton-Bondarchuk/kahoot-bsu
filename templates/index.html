@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-gamepad"></i> Quiz Manager</h1>
+            <p>Create and manage interactive quizzes</p>
+            <div class="user-info">
+                <span><i class="fas fa-user"></i> {{ .buildUser }}</span>
+                <span><i class="fas fa-calendar"></i> {{ .serverTime }}</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="quizzes"><i class="fas fa-list"></i> My Quizzes</button>
+            <button class="tab-btn" data-tab="create-quiz"><i class="fas fa-plus"></i> Create Quiz</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Quizzes List Tab -->
+            <div id="quizzes" class="tab-pane active">
+                <div class="quizzes-header">
+                    <h2>My Quizzes</h2>
+                </div>
+                <div id="quizzes-list" class="quizzes-grid">
+                    <!-- Quiz cards will be added here dynamically -->
+                    <div class="quiz-card loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading quizzes...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Quiz Tab -->
+            <div id="create-quiz" class="tab-pane">
+                <h2>Create New Quiz</h2>
+                <form id="quiz-form">
+                    <div class="form-group">
+                        <label for="quiz-title">Quiz Title</label>
+                        <input type="text" id="quiz-title" name="title" required placeholder="Enter quiz title">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary"><i class="fas fa-save"></i> Create Quiz</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quiz Detail Tab -->
+            <div id="quiz-detail" class="tab-pane">
+                <div class="quiz-detail-header">
+                    <button class="btn secondary back-btn"><i class="fas fa-arrow-left"></i> Back to Quizzes</button>
+                    <h2 id="quiz-detail-title">Quiz Title</h2>
+                    <div class="quiz-actions">
+                        <button id="edit-quiz-btn" class="btn secondary"><i class="fas fa-edit"></i> Edit Quiz</button>
+                        <button id="delete-quiz-btn" class="btn danger"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+                
+                <div class="questions-header">
+                    <h3>Questions</h3>
+                    <button id="add-question-btn" class="btn primary"><i class="fas fa-plus"></i> Add Question</button>
+                </div>
+                
+                <div id="questions-list">
+                    <!-- Questions will be added here dynamically -->
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- Edit Quiz Tab -->
+            <div id="edit-quiz" class="tab-pane">
+                <button class="btn secondary back-to-detail-btn"><i class="fas fa-arrow-left"></i> Back to Quiz</button>
+                <h2>Edit Quiz</h2>
+                <form id="edit-quiz-form">
+                    <div class="form-group">
+                        <label for="edit-quiz-title">Quiz Title</label>
+                        <input type="text" id="edit-quiz-title" name="title" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary"><i class="fas fa-save"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add/Edit Question Tab -->
+            <div id="question-form" class="tab-pane">
+                <button class="btn secondary back-to-detail-btn"><i class="fas fa-arrow-left"></i> Back to Quiz</button>
+                <h2 id="question-form-title">Add Question</h2>
+                <form id="add-question-form">
+                    <div class="form-group">
+                        <label for="question-text">Question Text</label>
+                        <input type="text" id="question-text" name="text" required placeholder="Enter question text">
+                    </div>
+                    <div class="form-group">
+                        <label for="question-time-limit">Time Limit (seconds)</label>
+                        <input type="number" id="question-time-limit" name="timeLimit" min="5" max="120" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="question-points">Points</label>
+                        <input type="number" id="question-points" name="points" min="50" max="1000" value="100">
+                    </div>
+                    
+                    <div class="options-container">
+                        <h3>Answer Options <button type="button" id="add-option-btn" class="btn secondary small"><i class="fas fa-plus"></i> Add Option</button></h3>
+                        <div id="options-list">
+                            <!-- Options will be added here -->
+                            <div class="option-item">
+                                <input type="text" name="option_text_1" placeholder="Option text" required>
+                                <label class="checkbox-container">
+                                    <input type="radio" name="correct_option" value="0" checked>
+                                    <span class="checkmark"></span>
+                                    Correct
+                                </label>
+                                <button type="button" class="btn danger small remove-option"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="option-item">
+                                <input type="text" name="option_text_2" placeholder="Option text" required>
+                                <label class="checkbox-container">
+                                    <input type="radio" name="correct_option" value="1">
+                                    <span class="checkmark"></span>
+                                    Correct
+                                </label>
+                                <button type="button" class="btn danger small remove-option"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary"><i class="fas fa-save"></i> <span id="question-submit-text">Add Question</span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Confirmation</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p>Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel" class="btn secondary">Cancel</button>
+                <button id="modal-confirm" class="btn danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Quiz Manager | {{ .buildUser }} | Version: {{ .version }}</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

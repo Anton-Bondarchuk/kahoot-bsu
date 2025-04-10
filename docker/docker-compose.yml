@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: app_sql_injection
+    container_name: app_kahoot
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -12,7 +12,7 @@ services:
       - postgres
 
   postgres:
-    container_name: postgres_sql_injection
+    container_name: postgres_kahoot
     image: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
   
   pgadmin:
-    container_name: pgadmin_sql_injection
+    container_name: pgadmin_kahoot
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
