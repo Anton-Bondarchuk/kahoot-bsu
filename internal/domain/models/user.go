@@ -2,7 +2,7 @@ package models
 
 
 type User struct {
-	TelegramID int64        `json:"telegram_id"`
-	Name       string       `json:"name"`
-	Email      string       `json:"email"`
+	ID int64        `json:"id"`
+	Login      string       `json:"login"`
+	Role int64 `json:"role"`
 }	

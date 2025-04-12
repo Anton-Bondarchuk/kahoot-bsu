@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"kahoot_bsu/internal/domain/question"
-	"time"
+	"kahoot_bsu/internal/domain/models/question"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,11 +29,6 @@ func (r *pgQuestionRepository) Create(ctx context.Context, q *question.Question)
 	}
 	defer tx.Rollback(ctx)
 
-	// Set creation timestamps
-	now := time.Now()
-	q.CreatedAt = now
-	q.UpdatedAt = now
-
 	// Default values
 	if q.TimeLimit == 0 {
 		q.TimeLimit = 30
@@ -47,7 +41,7 @@ func (r *pgQuestionRepository) Create(ctx context.Context, q *question.Question)
 	_, err = tx.Exec(ctx, `
 		INSERT INTO questions (uuid, quiz_uuid, text, time_limit, points, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`, q.ID, q.QuizID, q.Text, q.TimeLimit, q.Points, q.CreatedAt, q.UpdatedAt)
+	`, q.ID, q.QuizID, q.Text, q.TimeLimit, q.Points)
 	if err != nil {
 		return fmt.Errorf("failed to insert question: %w", err)
 	}
@@ -94,12 +88,11 @@ func (r *pgQuestionRepository) Update(
 	}
 
 	// Update the question
-	existingQuestion.UpdatedAt = time.Now()
 	_, err = tx.Exec(ctx, `
 		UPDATE questions 
 		SET text = $1, time_limit = $2, points = $3, updated_at = $4
 		WHERE uuid = $5
-	`, existingQuestion.Text, existingQuestion.TimeLimit, existingQuestion.Points, existingQuestion.UpdatedAt, questionUUID)
+	`, existingQuestion.Text, existingQuestion.TimeLimit, existingQuestion.Points, questionUUID)
 	if err != nil {
 		return fmt.Errorf("failed to update question: %w", err)
 	}
@@ -204,7 +197,7 @@ func (r *pgQuestionRepository) getQuestionWithTx(ctx context.Context, tx pgx.Tx,
 		SELECT uuid, quiz_uuid, text, time_limit, points, created_at, updated_at
 		FROM questions
 		WHERE uuid = $1
-	`, uuid).Scan(&q.ID, &q.QuizID, &q.Text, &q.TimeLimit, &q.Points, &q.CreatedAt, &q.UpdatedAt)
+	`, uuid).Scan(&q.ID, &q.QuizID, &q.Text, &q.TimeLimit, &q.Points)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -234,8 +227,6 @@ func (r *pgQuestionRepository) scanQuestionsRows(ctx context.Context, rows pgx.R
 			&q.Text,
 			&q.TimeLimit,
 			&q.Points,
-			&q.CreatedAt,
-			&q.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan question row: %w", err)
 		}

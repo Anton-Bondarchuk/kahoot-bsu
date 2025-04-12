@@ -70,3 +70,35 @@ func fetchConfigPath() string {
 
 	return res
 }
+
+
+// TODO: integrate to logic
+
+type ServerConfig struct {
+	Host            string
+	Port            int
+	ReadTimeout     int
+	WriteTimeout    int
+	ShutdownTimeout int
+}
+
+// DatabaseConfig holds database configuration
+type DatabaseConfig struct {
+	Driver   string
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DBName   string
+	SSLMode  string
+}
+
+// RabbitMQConfig holds RabbitMQ configuration
+type RabbitMQConfig struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	VHost    string
+	Exchange string
+}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"kahoot_bsu/internal/infra"
-	"kahoot_bsu/internal/kahoot/handlers"
+	"kahoot_bsu/internal/kahoot/admin/handlers"
 	"log"
 	"net/http"
 	"os"
@@ -111,7 +111,7 @@ func main() {
 	api := router.Group("/api")
 	{
 		// Quiz routes
-		api.GET("/quizzes", handlers.GetQuizzes)
+		api.GET("/quizzes", handlers.GetUserQuizzes)
 		api.POST("/quizzes", handlers.CreateQuiz)
 		api.GET("/quizzes/:id", handlers.GetQuiz)
 		api.PUT("/quizzes/:id", handlers.UpdateQuiz)

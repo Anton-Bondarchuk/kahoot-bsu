@@ -1,0 +1,15 @@
+Hello, {{.Login}}!
+
+Thank you for registering for the BSU Quiz Platform. To verify your email address, please use the following code:
+
+{{.Code}}
+
+This verification code will expire in {{.ExpiresIn}}.
+
+If you did not request this code, please ignore this email.
+
+Best regards,
+BSU Quiz Team
+
+© {{.CurrentYear}} Belarusian State University. All rights reserved.
+This email was sent to rct.{{.Login}}@bsu.by

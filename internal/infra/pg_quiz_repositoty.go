@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"kahoot_bsu/internal/domain/question"
-	"kahoot_bsu/internal/domain/quiz"
+	kahootQuestion "kahoot_bsu/internal/domain/models/question"
+	"kahoot_bsu/internal/domain/models/quiz"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -73,7 +73,7 @@ func (r *pgQuizRepository) UpdateOrCreate(ctx context.Context, quiz *quiz.Quiz) 
 
 	// Check if quiz exists
 	var exists bool
-	err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM quizzes WHERE uuid = $1)", quiz.ID).Scan(&exists)
+	err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM quizzes WHERE id = $1)", quiz.ID).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("failed to check if quiz exists: %w", err)
 	}
@@ -84,21 +84,21 @@ func (r *pgQuizRepository) UpdateOrCreate(ctx context.Context, quiz *quiz.Quiz) 
 		_, err = tx.Exec(ctx, `
 			UPDATE quizzes 
 			SET title = $1, updated_at = $2
-			WHERE uuid = $3
+			WHERE id = $3
 		`, quiz.Title, now, quiz.ID)
 		if err != nil {
 			return fmt.Errorf("failed to update quiz: %w", err)
 		}
-
 		// Remove existing questions and options
-		_, err = tx.Exec(ctx, "DELETE FROM questions WHERE quiz_uuid = $1", quiz.ID)
-		if err != nil {
-			return fmt.Errorf("failed to delete existing questions: %w", err)
-		}
+		// TODO: review this 
+		// _, err = tx.Exec(ctx, "DELETE FROM questions WHERE quiz_uuid = $1", quiz.ID)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to delete existing questions: %w", err)
+		// }
 	} else {
 		// Create new quiz
 		_, err = tx.Exec(ctx, `
-			INSERT INTO quizzes (uuid, user_uuid, title, created_at, updated_at)
+			INSERT INTO quizzes (id, user_id, title, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5)
 		`, quiz.ID, quiz.UserID, quiz.Title, now, now)
 		if err != nil {
@@ -115,8 +115,8 @@ func (r *pgQuizRepository) UpdateOrCreate(ctx context.Context, quiz *quiz.Quiz) 
 }
 
 // Delete removes a quiz by UUID
-func (r *pgQuizRepository) Delete(ctx context.Context, uuid string) error {
-	_, err := r.conn.Exec(ctx, "DELETE FROM quizzes WHERE uuid = $1", uuid)
+func (r *pgQuizRepository) Delete(ctx context.Context, id string) error {
+	_, err := r.conn.Exec(ctx, "DELETE FROM quizzes WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("failed to delete quiz: %w", err)
 	}
@@ -129,7 +129,7 @@ func (r *pgQuizRepository) Quiz(ctx context.Context, uuid string) (*quiz.Quiz, e
 }
 
 // UserQuizzes retrieves all quizzes belonging to a specific user
-func (r *pgQuizRepository) UserQuizzes(ctx context.Context, userID string) ([]*quiz.Quiz, error) {
+func (r *pgQuizRepository) UserQuizzes(ctx context.Context, userID int64) ([]*quiz.Quiz, error) {
 	rows, err := r.conn.Query(ctx, `
 		SELECT uuid, user_uuid, title, created_at, updated_at 
 		FROM quizzes
@@ -197,7 +197,7 @@ func (r *pgQuizRepository) getQuizWithTx(ctx context.Context, tx pgx.Tx, uuid st
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, quiz.QuizNotFoundError{UUID: uuid}
+			return nil, quiz.QuizNotFoundError{ID: uuid}
 		}
 		return nil, fmt.Errorf("failed to retrieve quiz: %w", err)
 	}
@@ -244,17 +244,15 @@ func (r *pgQuizRepository) loadQuizQuestionsWithTx(ctx context.Context, tx pgx.T
 
 // scanQuestionsRows scans questions rows and loads options for each question
 func (r *pgQuizRepository) scanQuestionsRows(ctx context.Context, rows pgx.Rows, q *quiz.Quiz) error {
-	var questions []question.Question
+	var questions []kahootQuestion.Question
 	for rows.Next() {
-		var question question.Question
+		var question kahootQuestion.Question
 		if err := rows.Scan(
 			&question.ID, 
 			&question.QuizID, 
 			&question.Text, 
 			&question.TimeLimit, 
 			&question.Points, 
-			&question.CreatedAt, 
-			&question.UpdatedAt,
 		); err != nil {
 			return fmt.Errorf("failed to scan question row: %w", err)
 		}
@@ -276,7 +274,7 @@ func (r *pgQuizRepository) scanQuestionsRows(ctx context.Context, rows pgx.Rows,
 }
 
 // loadQuestionOptions loads options for a question
-func (r *pgQuizRepository) loadQuestionOptions(ctx context.Context, question *question.Question) error {
+func (r *pgQuizRepository) loadQuestionOptions(ctx context.Context, question *kahootQuestion.Question) error {
 	rows, err := r.conn.Query(ctx, `
 		SELECT uuid, question_uuid, text, is_correct
 		FROM options
@@ -287,9 +285,9 @@ func (r *pgQuizRepository) loadQuestionOptions(ctx context.Context, question *qu
 	}
 	defer rows.Close()
 
-	var options []quiz.Option
+	var options []kahootQuestion.Option
 	for rows.Next() {
-		var option quiz.Option
+		var option kahootQuestion.Option
 		if err := rows.Scan(&option.ID, &option.QuestionID, &option.Text, &option.IsCorrect); err != nil {
 			return fmt.Errorf("failed to scan option row: %w", err)
 		}

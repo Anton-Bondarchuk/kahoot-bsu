@@ -1,18 +1,17 @@
 package main
 
 import (
-	"kahoot_bsu/internal/bot"
-	"kahoot_bsu/internal/config"
-	"log"
+	"kahoot_bsu/internal/service/telegram"
 )
 
 func main() {
-	cfg := config.MustLoad()
+	app, closeFunc := telegram.NewAppTelegram()
+	defer func() {
+		err := closeFunc()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
-	telegramBot, err := bot.New(cfg.BotConfig)
-	if err != nil {
-		log.Fatalf("Exception on the start the bot: %v", err)
-	}
-
-	bot.Start(telegramBot)
+	telegram.Start(app.Bot)
 }
