@@ -8,21 +8,34 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
-
 type Config struct {
-	Env            string     `yaml:"env" env-default:"prod"`
-	StorageConfig  StorageConfig     `yaml:"storage" env-required:"true"`
-	BotConfig      BotConfig  `yaml:"bot" env-required:"true"`
+	Env           string        `yaml:"env" env-default:"prod"`
+	StorageConfig StorageConfig `yaml:"storage" env-required:"true"`
+	BotConfig     BotConfig     `yaml:"bot" env-required:"true"`
+	EmailConfig   EmailConfig   `yaml:"email" env-required:"true"`
 }
 
 type StorageConfig struct {
-	DatabaseUrl string  `yaml:"database_url" env-required:"true"`
+	DatabaseUrl string `yaml:"database_url" env-required:"true"`
 }
 
 type BotConfig struct {
-	Token string `yaml:"token" env-required:"true"`
-	Timeout int  `yaml:"timeout" env-default:"60"`
-	Debug    bool `yaml:"debug" env-default:"false"`
+	Token   string `yaml:"token" env-required:"true"`
+	Timeout int    `yaml:"timeout" env-default:"60"`
+	Debug   bool   `yaml:"debug" env-default:"false"`
+}
+
+type EmailConfig struct {
+	Host        string `yaml:"host" env-default:"smtp.bsu.by"`
+	Port        int    `yaml:"port" env-default:"587"`
+	Username    string `yaml:"username" env:"SMTP_USERNAME" env-default:"serviceemail@bsu.by"`
+	Password    string `yaml:"password" env:"SMTP_PASSWORD" env-required:"true"`
+	FromEmail   string `yaml:"from_email" env-default:"quiz@bsu.by"`
+	FromName    string `yaml:"from_name" env-default:"BSU Quiz Platform"`
+	Domain      string `yaml:"domain" env-default:"bsu.by"`
+	Prefix      string `yaml:"prefix" env-default:"rct."`
+	TemplateDir string `yaml:"template_dir" env-default:"templates/email"`
+	Debug       bool   `yaml:"debug" env-default:"false"`
 }
 
 func MustLoad() *Config {
@@ -70,7 +83,6 @@ func fetchConfigPath() string {
 
 	return res
 }
-
 
 // TODO: integrate to logic
 

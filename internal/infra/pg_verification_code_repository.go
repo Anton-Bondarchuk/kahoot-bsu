@@ -65,7 +65,7 @@ func (r *pgVerificationCodeRepository) UpdateOrCreate(ctx context.Context, userI
 
 // Delete implements models.VerificationCodeRepository.
 func (r *pgVerificationCodeRepository) Delete(ctx context.Context, deleteFn func(innerCtx context.Context)) error {
-
+	panic("pgVerificationCodeRepository")
 }
 
 // DeleteByUserId implements models.VerificationCodeRepository.

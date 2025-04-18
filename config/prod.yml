@@ -14,3 +14,16 @@ bot:
 web_app:
   url: ""
   port: 8081
+
+
+email:
+  host: "smtp.bsu.by"
+  port: 587
+  username: ""
+  password: ""
+  from_email: ""
+  from_name: "Quiz Platform"
+  domain: "bsu.by"
+  prefix: "rct."
+  template_dir: "./templates/email"
+  debug: false

@@ -12,5 +12,6 @@ type CommandHandler struct {
 func New(bot *models.Bot, WebAppUrl string) *CommandHandler {
 	return &CommandHandler{
 		bot: bot, 
-		WebAppUrl: WebAppUrl}
+		WebAppUrl: WebAppUrl,
+	}
 }

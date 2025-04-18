@@ -7,9 +7,9 @@ import (
 
 const (
 	RoleUser    int = 1 << iota // 1 (0001) - Regular User
-	RoleAdmin               // 2 (0010) - Administrator
-	RoleTeacher             // 4 (0100) - Teacher
-	RoleBlocked             // 8 (1000) - Blocked User
+	RoleAdmin                   // 2 (0010) - Administrator
+	RoleTeacher                 // 4 (0100) - Teacher
+	RoleBlocked                 // 8 (1000) - Blocked User
 )
 
 // Role names for display purposes
@@ -66,14 +66,14 @@ func (a *Auth) RemoveRole(role int) {
 // GetRoleNames returns a list of role names that the user has
 func (a *Auth) GetRoleNames() []string {
 	var roles []string
-	
+
 	// Check each role bit
 	for role, name := range RoleNames {
 		if a.HasRole(role) {
 			roles = append(roles, name)
 		}
 	}
-	
+
 	return roles
 }
 
@@ -98,7 +98,7 @@ func (a *Auth) CanCreateQuiz() bool {
 	if a.IsBlocked() {
 		return false
 	}
-	
+
 	// Admins and teachers can create quizzes
 	return a.HasAnyRole(RoleAdmin, RoleTeacher)
 }

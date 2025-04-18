@@ -27,15 +27,15 @@ var (
 func main() {
 	// Command line flags
 	var (
-		addr     = flag.String("addr", ":8080", "HTTP server address")
-		dbURL    = flag.String("db", os.Getenv("DATABASE_URL"), "Database connection URL")
+		addr  = flag.String("addr", ":8080", "HTTP server address")
+		dbURL = flag.String("db", os.Getenv("DATABASE_URL"), "Database connection URL")
 		// logLevel = flag.String("log-level", "info", "Log level (debug, info, warn, error)")
-		env      = flag.String("env", "development", "Environment (development, production)")
+		env = flag.String("env", "development", "Environment (development, production)")
 	)
 	flag.Parse()
 
 	// Set up logging
-	log.Printf("Starting Kahoot BSU API server (version: %s, build: %s, user: %s)", 
+	log.Printf("Starting Kahoot BSU API server (version: %s, build: %s, user: %s)",
 		version, buildTime, buildUser)
 	log.Printf("Environment: %s", *env)
 
@@ -49,10 +49,10 @@ func main() {
 		*dbURL = "postgres://postgres:postgres@localhost:5432/postgres"
 	}
 	log.Printf("Connecting to database")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	db, err := pgxpool.New(ctx, *dbURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -89,24 +89,22 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
+	// Setup template rendering
+	router.LoadHTMLGlob("templates/*")
 
-		// Setup template rendering
-		router.LoadHTMLGlob("templates/*")
-	
-		// Static file serving
-		router.Static("/static", "./static")
-	
-		// Render index.html template
-		router.GET("/", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "index.html", gin.H{
-				"title":      "Kahoot BSU Quiz Application",
-				"version":    version,
-				"buildTime":  buildTime,
-				"buildUser":  buildUser,
-				"serverTime": time.Now().Format("2006-01-02 15:04:05"),
-			})
+	// Static file serving
+	router.Static("/static", "./static")
+
+	// Render index.html template
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title":      "Kahoot BSU Quiz Application",
+			"version":    version,
+			"buildTime":  buildTime,
+			"buildUser":  buildUser,
+			"serverTime": time.Now().Format("2006-01-02 15:04:05"),
 		})
-	
+	})
 
 	api := router.Group("/api")
 	{

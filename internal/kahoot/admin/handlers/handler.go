@@ -29,16 +29,16 @@ func NewHandlers(quizRepo quiz.Repository, questionRepo question.Repository) *Ha
 
 // GetQuizzes handles GET /api/quizzes
 func (h *Handlers) GetUserQuizzes(c *gin.Context) {
-	ctx := c.Request.Context()
-	userID := c.GetString("userID")
+	// ctx := c.Request.Context()
+	// userID := c.GetString("userID")
 
-	quizzes, err := h.quizRepo.UserQuizzes(ctx, userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch quizzes"})
-		return
-	}
+	// quizzes, err := h.quizRepo.UserQuizzes(ctx, userID)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch quizzes"})
+	// 	return
+	// }
 	
-	c.JSON(http.StatusOK, quizzes)
+	// c.JSON(http.StatusOK, quizzes)
 }
 
 // CreateQuiz handles POST /api/quizzes

@@ -90,7 +90,7 @@ func (r *pgQuizRepository) UpdateOrCreate(ctx context.Context, quiz *quiz.Quiz) 
 			return fmt.Errorf("failed to update quiz: %w", err)
 		}
 		// Remove existing questions and options
-		// TODO: review this 
+		// TODO: review this
 		// _, err = tx.Exec(ctx, "DELETE FROM questions WHERE quiz_uuid = $1", quiz.ID)
 		// if err != nil {
 		// 	return fmt.Errorf("failed to delete existing questions: %w", err)
@@ -248,20 +248,20 @@ func (r *pgQuizRepository) scanQuestionsRows(ctx context.Context, rows pgx.Rows,
 	for rows.Next() {
 		var question kahootQuestion.Question
 		if err := rows.Scan(
-			&question.ID, 
-			&question.QuizID, 
-			&question.Text, 
-			&question.TimeLimit, 
-			&question.Points, 
+			&question.ID,
+			&question.QuizID,
+			&question.Text,
+			&question.TimeLimit,
+			&question.Points,
 		); err != nil {
 			return fmt.Errorf("failed to scan question row: %w", err)
 		}
-		
+
 		// Load options for this question
 		if err := r.loadQuestionOptions(ctx, &question); err != nil {
 			return err
 		}
-		
+
 		questions = append(questions, question)
 	}
 
@@ -308,7 +308,7 @@ func (r *pgQuizRepository) updateQuizQuestions(ctx context.Context, tx pgx.Tx, q
 	for i := range q.Questions {
 		question := &q.Questions[i]
 		question.QuizID = q.ID
-		
+
 		// Insert question
 		_, err := tx.Exec(ctx, `
 			INSERT INTO questions (uuid, quiz_uuid, text, time_limit, points, created_at, updated_at)
@@ -322,7 +322,7 @@ func (r *pgQuizRepository) updateQuizQuestions(ctx context.Context, tx pgx.Tx, q
 		for j := range question.Options {
 			option := &question.Options[j]
 			option.QuestionID = question.ID
-			
+
 			_, err := tx.Exec(ctx, `
 				INSERT INTO options (uuid, question_uuid, text, is_correct)
 				VALUES ($1, $2, $3, $4)
@@ -332,6 +332,6 @@ func (r *pgQuizRepository) updateQuizQuestions(ctx context.Context, tx pgx.Tx, q
 			}
 		}
 	}
-	
+
 	return nil
 }

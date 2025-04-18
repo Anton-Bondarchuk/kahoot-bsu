@@ -4,7 +4,6 @@ import (
 	"kahoot_bsu/internal/domain/models"
 )
 
-
 type MessagesHandler struct {
 	bot *models.Bot
 }

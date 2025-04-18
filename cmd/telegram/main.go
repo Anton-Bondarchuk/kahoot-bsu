@@ -13,5 +13,5 @@ func main() {
 		}
 	}()
 
-	telegram.Start(app.Bot)
+	telegram.Start(app)
 }

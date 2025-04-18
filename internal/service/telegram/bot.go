@@ -6,9 +6,15 @@ import (
 	"fmt"
 	"kahoot_bsu/internal/app/command"
 	"kahoot_bsu/internal/app/messages"
+	"kahoot_bsu/internal/auth"
 	"kahoot_bsu/internal/config"
 	"kahoot_bsu/internal/domain/models"
+	"kahoot_bsu/internal/infra"
+	"time"
+
 	"kahoot_bsu/internal/logger/handlers/slogpretty"
+	"kahoot_bsu/internal/service/email"
+	"kahoot_bsu/internal/service/fsm"
 	"log/slog"
 	"os"
 
@@ -23,16 +29,17 @@ const (
 )
 
 type AppTelegram struct {
-	Conn *pgxpool.Pool
-	Bot  *models.Bot
-	Log  *slog.Logger
+	Config *config.Config
+	Conn   *pgxpool.Pool
+	Bot    *models.Bot
+	Log    *slog.Logger
 }
 
 func NewAppTelegram() (
 	app *AppTelegram,
 	close func() error,
 ) {
-	
+
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
 
@@ -61,25 +68,25 @@ func NewAppTelegram() (
 			)
 		}
 	}
-	
+
 	log.Info("Connected to database successfully")
 
 	app = &AppTelegram{
+		Config: cfg,
 		Bot:    telegramBot,
-		Conn:     db,
-		Log: log,
+		Conn:   db,
+		Log:    log,
 	}
 
 	closeFunc := func() error {
 		var err error
-		
+
 		// if i will have errors I should use it
 		return err
 	}
 
 	return app, closeFunc
 }
-
 
 func newBot(cfg config.BotConfig) (*models.Bot, error) {
 	botAPI, err := tgbotapi.NewBotAPI(cfg.Token)
@@ -100,30 +107,35 @@ func newBot(cfg config.BotConfig) (*models.Bot, error) {
 		UpdateChannel: updates}, nil
 }
 
-func Start(b *models.Bot) {
-	for update := range b.UpdateChannel {
+func Start(a *AppTelegram) {
+	for update := range a.Bot.UpdateChannel {
 		if update.Message == nil {
 			continue
 		}
 
 		if update.Message.IsCommand() {
-			handleCommand(b, update.Message)
+			handleCommand(a, update.Message)
 		} else {
-			handleMessages(b, update.Message)
+			handleMessages(a, update.Message)
 		}
 	}
 }
+
 type CommandInterface interface {
 	Execute(message *tgbotapi.Message)
 }
 
-func handleCommand(b *models.Bot, message *tgbotapi.Message) {
-	comandHandler := command.New(b, "https://af09-185-53-133-77.ngrok-free.app/")
-	// vericationRepo := infra.NewPgVerificationCodeRepository()
+func handleCommand(a *AppTelegram, message *tgbotapi.Message) {
+	comandHandler := command.New(a.Bot, "https://af09-185-53-133-77.ngrok-free.app/")
+	fsm := infra.NewPgFsmRegistrationRepository(a.Conn)
+	registerHandler := command.NewRegisterCommand(
+		comandHandler,
+		fsm,
+	)
 
 	commandStrategy := map[string]CommandInterface{
 		"start":    &command.StartCommand{CommandHandler: comandHandler},
-		"register": &command.RegisterCommand{CommandHandler: comandHandler},
+		"register": registerHandler,
 		"kahoot":   &command.KahootComand{CommandHandler: comandHandler},
 		"help":     &command.HelpCommand{CommandHandler: comandHandler},
 		"unknown":  &command.UnknownCommand{CommandHandler: comandHandler},
@@ -139,10 +151,27 @@ func handleCommand(b *models.Bot, message *tgbotapi.Message) {
 	commandStrategy[message.Command()].Execute(message)
 }
 
-func handleMessages(b *models.Bot, message *tgbotapi.Message) {
-	messHandler := messages.New(b)
+func handleMessages(a *AppTelegram, message *tgbotapi.Message) {
+	messHandler := messages.New(a.Bot)
+	emailClient := email.NewEmailClient(
+		a.Config.EmailConfig,
+		email.WithTemplateDir("./templates/email"),
+	)
+	emailService := email.NewEmailService(emailClient)
+	userRepo := infra.NewPgUserRepository(a.Conn)
+	vericationRepo := infra.NewPgVerificationCodeRepository(a.Conn)
+	fsmRepo := infra.NewPgFsmRegistrationRepository(a.Conn)
+	fsmService := fsm.NewFSMService(vericationRepo, fsmRepo, a.Conn)
+	codeGen := auth.NewVerificationOTPGenerator(6)
 
-	emailReg := &messages.HandleEmailRegistrationMessenger{MessagesHandler: messHandler}
+	emailReg := messages.NewEmailRegistrationHandler(
+		messHandler,
+		emailService,
+		codeGen,
+		userRepo,
+		fsmService,
+	)
+
 	emailReg.Execute(message)
 }
 
@@ -164,7 +193,6 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
-
 
 func setupPrettySlog() *slog.Logger {
 	opts := slogpretty.PrettyHandlerOptions{
