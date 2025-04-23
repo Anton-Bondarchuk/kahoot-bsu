@@ -85,11 +85,6 @@ func WithPort(port int) Option {
 	}
 }
 
-func WithPassword(password string) Option {
-	return func(args *Options) {
-		args.Password = password
-	}
-}
 
 func NewEmailClient(cfg config.EmailConfig, setters ...Option) *EmailClient {
 	opt := &Options{

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )
@@ -13,6 +14,7 @@ type Config struct {
 	StorageConfig StorageConfig `yaml:"storage" env-required:"true"`
 	BotConfig     BotConfig     `yaml:"bot" env-required:"true"`
 	EmailConfig   EmailConfig   `yaml:"email" env-required:"true"`
+	RedisConfig   RedisConfig   `yaml:"redis" env-required:"true"`
 }
 
 type StorageConfig struct {
@@ -26,7 +28,7 @@ type BotConfig struct {
 }
 
 type EmailConfig struct {
-	Host        string `yaml:"host" env-default:"smtp.bsu.by"`
+	Host        string `yaml:"host" env-default:"smtp.gmail.com"`
 	Port        int    `yaml:"port" env-default:"587"`
 	Username    string `yaml:"username" env:"SMTP_USERNAME" env-default:"serviceemail@bsu.by"`
 	Password    string `yaml:"password" env:"SMTP_PASSWORD" env-required:"true"`
@@ -36,6 +38,14 @@ type EmailConfig struct {
 	Prefix      string `yaml:"prefix" env-default:"rct."`
 	TemplateDir string `yaml:"template_dir" env-default:"templates/email"`
 	Debug       bool   `yaml:"debug" env-default:"false"`
+}
+
+type RedisConfig struct {
+	Addr          string
+	Password      string
+	DB            int
+	KeyPrefix     string
+	DefaultExpiry time.Duration
 }
 
 func MustLoad() *Config {

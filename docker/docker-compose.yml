@@ -42,6 +42,16 @@ services:
       - postgres
     restart: unless-stopped
 
+  redis:
+    image: redis
+    container_name: redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+
 networks:
   postgres:
     driver: bridge

@@ -2,3 +2,6 @@
 congig/local.yml
 
 .env
+
+*.rdb 
+/docker/data

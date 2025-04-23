@@ -33,6 +33,7 @@ type AppTelegram struct {
 	Conn   *pgxpool.Pool
 	Bot    *models.Bot
 	Log    *slog.Logger
+	router *fsm.Router
 }
 
 func NewAppTelegram() (
@@ -71,11 +72,44 @@ func NewAppTelegram() (
 
 	log.Info("Connected to database successfully")
 
+
+	storage := infra.NewRedisStorage(cfg.RedisConfig)
+
+	err = storage.Ping(context.Background())
+	if err != nil {
+		return nil, func() error {
+			return errors.Join(
+				fmt.Errorf("failed to connect to Redis: %v", err.Error()),
+			)
+		}
+	}
+
+	router := fsm.NewRouter(storage)
+
+	emailClient := email.NewEmailClient(
+		cfg.EmailConfig,
+		email.WithTemplateName("verification"),
+	)
+	emailService := email.NewEmailService(emailClient)
+	userRepo := infra.NewPgUserRepository(db)
+	otpGenerator := auth.NewVerificationOTPGenerator(6)
+
+	fSMHandler := messages.NewFSMHandler(
+		emailService, 
+		userRepo,
+		otpGenerator,
+	)
+
+	router.Register(fsm.StateAwaitingLogin, fSMHandler.HandleLogin)
+	router.Register(fsm.StateAwaitingOTP, fSMHandler.HandleOTP)
+	router.Register(fsm.StateRegistered, fSMHandler.HandleRegistered)
+
 	app = &AppTelegram{
 		Config: cfg,
 		Bot:    telegramBot,
 		Conn:   db,
 		Log:    log,
+		router: router,
 	}
 
 	closeFunc := func() error {
@@ -104,7 +138,8 @@ func newBot(cfg config.BotConfig) (*models.Bot, error) {
 
 	return &models.Bot{
 		Telegram:      botAPI,
-		UpdateChannel: updates}, nil
+		UpdateChannel: updates,
+	}, nil
 }
 
 func Start(a *AppTelegram) {
@@ -113,10 +148,20 @@ func Start(a *AppTelegram) {
 			continue
 		}
 
+		// Fix me
+		chatID := update.Message.Chat.ID
+		userID := update.Message.From.ID
+	
+		fsm := fsm.NewFSMContext(context.Background(), a.router.Storage, chatID, userID)
+
 		if update.Message.IsCommand() {
-			handleCommand(a, update.Message)
+			handleCommand(a, update.Message, fsm)
 		} else {
-			handleMessages(a, update.Message)
+
+			if err := a.router.ProcessUpdate(context.Background(), &update, a.Bot); err != nil {
+				a.Log.Error("Error processing update: %v", err)
+			}
+
 		}
 	}
 }
@@ -125,13 +170,9 @@ type CommandInterface interface {
 	Execute(message *tgbotapi.Message)
 }
 
-func handleCommand(a *AppTelegram, message *tgbotapi.Message) {
+func handleCommand(a *AppTelegram, message *tgbotapi.Message, fsm *fsm.FSMContext) {
 	comandHandler := command.New(a.Bot, "https://af09-185-53-133-77.ngrok-free.app/")
-	fsm := infra.NewPgFsmRegistrationRepository(a.Conn)
-	registerHandler := command.NewRegisterCommand(
-		comandHandler,
-		fsm,
-	)
+	registerHandler := command.NewRegisterCommand(comandHandler, fsm)
 
 	commandStrategy := map[string]CommandInterface{
 		"start":    &command.StartCommand{CommandHandler: comandHandler},
@@ -151,29 +192,6 @@ func handleCommand(a *AppTelegram, message *tgbotapi.Message) {
 	commandStrategy[message.Command()].Execute(message)
 }
 
-func handleMessages(a *AppTelegram, message *tgbotapi.Message) {
-	messHandler := messages.New(a.Bot)
-	emailClient := email.NewEmailClient(
-		a.Config.EmailConfig,
-		email.WithTemplateDir("./templates/email"),
-	)
-	emailService := email.NewEmailService(emailClient)
-	userRepo := infra.NewPgUserRepository(a.Conn)
-	vericationRepo := infra.NewPgVerificationCodeRepository(a.Conn)
-	fsmRepo := infra.NewPgFsmRegistrationRepository(a.Conn)
-	fsmService := fsm.NewFSMService(vericationRepo, fsmRepo, a.Conn)
-	codeGen := auth.NewVerificationOTPGenerator(6)
-
-	emailReg := messages.NewEmailRegistrationHandler(
-		messHandler,
-		emailService,
-		codeGen,
-		userRepo,
-		fsmService,
-	)
-
-	emailReg.Execute(message)
-}
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
