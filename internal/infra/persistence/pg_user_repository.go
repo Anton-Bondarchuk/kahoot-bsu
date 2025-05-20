@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kahoot_bsu/internal/domain/models"
+	"kahoot_bsu/internal/ports/repository"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,7 +14,7 @@ type pgUserRepository struct {
 	conn *pgxpool.Pool
 }
 
-func NewPgUserRepository(conn *pgxpool.Pool) models.UserRepository {
+func NewPgUserRepository(conn *pgxpool.Pool) repository.UserRepository {
 	return &pgUserRepository{
 		conn: conn,
 	}
@@ -25,7 +26,7 @@ func (p *pgUserRepository) Update(ctx context.Context, userID int64, updateFn fu
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx) //
+	defer tx.Rollback(ctx) 
 
 	user := &models.User{}
 	err = tx.QueryRow(ctx, 
@@ -40,7 +41,6 @@ func (p *pgUserRepository) Update(ctx context.Context, userID int64, updateFn fu
 		return fmt.Errorf("failed to query user: %w", err)
 	}
 
-	// Execute the update function
 	if err := updateFn(ctx, user); err != nil {
 		return fmt.Errorf("update function failed: %w", err)
 	}

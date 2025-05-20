@@ -1,4 +1,4 @@
-package email
+package clients
 
 import (
 	"bytes"
@@ -16,7 +16,6 @@ type EmailClient struct {
 	Port         int
 	TemplateDir  string
 	TemplateName string
-	Prefix       string
 	Domain       string
 	FromName     string
 	FromEmail    string
@@ -28,7 +27,6 @@ type Options struct {
 	Port         int
 	TemplateDir  string
 	TemplateName string
-	Prefix       string // bsu email has several prefixes: rct. bio. and etc
 	Domain       string
 	FromName     string
 	FromEmail    string
@@ -46,12 +44,6 @@ func WithTemplateDir(temlateDir string) Option {
 func WithTemplateName(temlateName string) Option {
 	return func(args *Options) {
 		args.TemplateName = temlateName
-	}
-}
-
-func WithPrefix(prefix string) Option {
-	return func(args *Options) {
-		args.Prefix = prefix
 	}
 }
 
@@ -92,7 +84,6 @@ func NewEmailClient(cfg config.EmailConfig, setters ...Option) *EmailClient {
 		Port:         cfg.Port,
 		TemplateDir:  cfg.TemplateDir,
 		TemplateName: "verification",
-		Prefix:       cfg.Prefix,
 		Domain:       cfg.Domain,
 		FromName:     cfg.FromName,
 		FromEmail:    cfg.FromEmail,
@@ -108,7 +99,6 @@ func NewEmailClient(cfg config.EmailConfig, setters ...Option) *EmailClient {
 		Port:         opt.Port,
 		TemplateDir:  opt.TemplateDir,
 		TemplateName: opt.TemplateName,
-		Prefix:       opt.Prefix,
 		Domain:       opt.Domain,
 		FromName:     opt.FromName,
 		FromEmail:    opt.FromEmail,
@@ -120,10 +110,6 @@ func (c *EmailClient) SetTemplateName(name string) {
 	c.TemplateName = name
 }
 
-func (c *EmailClient) SetPrefix(prefix string) {
-	c.Prefix = prefix
-}
-
 func (c *EmailClient) SetDomain(domain string) {
 	c.Domain = domain
 }
@@ -133,7 +119,7 @@ func (c *EmailClient) SetFromName(fromName string) {
 }
 
 func (c *EmailClient) Send(login, subject string, data map[string]any) error {
-	to := fmt.Sprintf("%s%s@%s", c.Prefix, login, c.Domain)
+	to := fmt.Sprintf("%s@%s", login, c.Domain)
 
 	htmlBuf := MustReadHtmlFile(c.TemplateDir, c.TemplateName, data)
 

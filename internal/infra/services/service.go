@@ -1,7 +1,8 @@
-package email
+package services
 
 import (
 	"fmt"
+	"kahoot_bsu/internal/infra/clients"
 	"time"
 )
 
@@ -13,7 +14,7 @@ type EmailClientInterface interface {
 	Send(login, subject string, data map[string]any) error
 }
 
-func NewEmailService(client *EmailClient) *EmailService {
+func NewEmailService(client *clients.EmailClient) *EmailService {
 	return &EmailService{
 		Client: client,
 	}

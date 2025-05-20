@@ -1,4 +1,4 @@
-package handlers
+package kahoot
 
 import (
 	"context"

@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"kahoot_bsu/internal/app/command"
 	"kahoot_bsu/internal/app/messages"
-	"kahoot_bsu/internal/auth"
 	"kahoot_bsu/internal/config"
 	"kahoot_bsu/internal/domain/models"
-	"kahoot_bsu/internal/infra"
+	"kahoot_bsu/internal/infra/clients"
+	infra "kahoot_bsu/internal/infra/persistence"
+	"kahoot_bsu/internal/infra/services"
 	"time"
 
 	"kahoot_bsu/internal/logger/handlers/slogpretty"
-	"kahoot_bsu/internal/service/email"
 	"kahoot_bsu/internal/service/fsm"
 	"log/slog"
 	"os"
@@ -86,19 +86,12 @@ func NewAppTelegram() (
 
 	router := fsm.NewRouter(storage)
 
-	emailClient := email.NewEmailClient(
-		cfg.EmailConfig,
-		email.WithTemplateName("verification"),
-	)
-	emailService := email.NewEmailService(emailClient)
+	emailClient := clients.NewEmailClient(cfg.EmailConfig)
+	emailService := services.NewEmailService(emailClient)
 	userRepo := infra.NewPgUserRepository(db)
-	otpGenerator := auth.NewVerificationOTPGenerator(6)
+	otpGenerator := services.NewVerificationOTPGenerator(6)
 
-	fSMHandler := messages.NewFSMHandler(
-		emailService, 
-		userRepo,
-		otpGenerator,
-	)
+	fSMHandler := messages.NewFSMHandler(emailService, userRepo, otpGenerator)
 
 	router.Register(fsm.StateAwaitingLogin, fSMHandler.HandleLogin)
 	router.Register(fsm.StateAwaitingOTP, fSMHandler.HandleOTP)
