@@ -18,5 +18,11 @@ func (s State) Group() StateGroup {
 	return ""
 }
 
-// DefaultState is used when no state is set
-const DefaultState State = ""
+
+const (
+	DefaultState       State = ""
+	StateStart         State = "start"
+	StateAwaitingLogin State = "awaiting_login"
+	StateAwaitingOTP   State = "awaiting_otp"
+	StateRegistered    State = "registered"
+)

@@ -2,7 +2,7 @@ package services
 
 import (
 	"crypto/rand"
-	contract "kahoot_bsu/internal/ports/service"
+	"kahoot_bsu/internal/ports"
 )
 
 // otp - one time password
@@ -10,7 +10,7 @@ type verificationOTPGenerator struct {
 	lenght int
 }
 
-func NewVerificationOTPGenerator(lenght int) contract.VerificationCodeGenerator {
+func NewVerificationOTPGenerator(lenght int) ports.VerificationCodeGenerator {
 	return &verificationOTPGenerator{
 		lenght: lenght,
 	}

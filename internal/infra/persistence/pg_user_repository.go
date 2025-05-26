@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"kahoot_bsu/internal/domain/models"
-	"kahoot_bsu/internal/ports/repository"
+	"kahoot_bsu/internal/ports"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,7 +14,7 @@ type pgUserRepository struct {
 	conn *pgxpool.Pool
 }
 
-func NewPgUserRepository(conn *pgxpool.Pool) repository.UserRepository {
+func NewPgUserRepository(conn *pgxpool.Pool) ports.UserRepository {
 	return &pgUserRepository{
 		conn: conn,
 	}

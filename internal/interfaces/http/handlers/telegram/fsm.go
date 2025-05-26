@@ -1,11 +1,12 @@
-package messages
+package telegram
 
 import (
 	"context"
 	"errors"
 	"kahoot_bsu/internal/auth"
 	"kahoot_bsu/internal/domain/models"
-	"kahoot_bsu/internal/service/email"
+	"kahoot_bsu/internal/infra/services"
+	ports "kahoot_bsu/internal/ports"
 	"log"
 	"time"
 
@@ -14,18 +15,24 @@ import (
 	fsmSrv "kahoot_bsu/internal/service/fsm"
 )
 
-// fix me
+const (
+	DefaultState       models.State = ""
+	StateStart         models.State = "start"
+	StateAwaitingLogin models.State = "awaiting_login"
+	StateAwaitingOTP   models.State = "awaiting_otp"
+	StateRegistered    models.State = "registered"
+)
 
 type fSMHandler struct {
-	emailService *email.EmailService
-	userRepo     models.UserRepository
-	otpGenerator models.VerificationCodeGenerator
+	emailService *services.EmailService
+	userRepo     ports.UserRepository
+	otpGenerator ports.VerificationCodeGenerator
 }
 
 func NewFSMHandler(
-	emailService *email.EmailService,
-	userRepo models.UserRepository,
-	otpGenerator models.VerificationCodeGenerator,
+	emailService *services.EmailService,
+	userRepo ports.UserRepository,
+	otpGenerator ports.VerificationCodeGenerator,
 ) *fSMHandler {
 	return &fSMHandler{
 		emailService: emailService,
