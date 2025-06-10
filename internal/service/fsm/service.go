@@ -42,7 +42,7 @@ type FSMContext struct {
 }
 
 // NewFSMContext creates a new FSM context for a user in a chat
-func NewFSMContext(ctx context.Context, storage Storage, chatID, userID int64) *FSMContext {
+func NewFSMContext(ctx context.Context, storage Storage, stateProvider  chatID, userID int64) *FSMContext {
 	return &FSMContext{
 		storage: storage,
 		chatID:  chatID,
@@ -140,17 +140,7 @@ func (r *Router) DefaultMessage(handler HandlerFunc) {
 }
 
 // ProcessUpdate processes an update based on the current FSM state (similar to aiogram's Dispatcher)
-func (r *Router) ProcessUpdate(ctx context.Context, update *tgbotapi.Update, bot *models.Bot) error {
-	if update.Message == nil {
-		return nil // Only process messages for now
-	}
-
-	chatID := update.Message.Chat.ID
-	userID := update.Message.From.ID
-	message := update.Message
-
-	fsm := NewFSMContext(ctx, r.Storage, chatID, userID)
-
+func (r *Router) ProcessUpdate(ctx context.Context, message *tgbotapi.Message, bot *models.Bot, fsm *FSMContext) error {
 	state, err := fsm.Current()
 	if err != nil {
 		return err
@@ -158,9 +148,6 @@ func (r *Router) ProcessUpdate(ctx context.Context, update *tgbotapi.Update, bot
 
 	handler, exists := r.stateHandlers[state]
 	if !exists {
-		if r.defaultHandler != nil {
-			return r.defaultHandler(ctx, fsm, message, bot)
-		}
 		return errors.New("no handler for state")
 	}
 
